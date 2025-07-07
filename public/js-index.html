@@ -1,0 +1,61 @@
+<html>
+
+<head>
+  <title>Express</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+  <h1>Express</h1>
+  <p>Welcome to Express</p>
+
+  <!-- 查詢下拉選單 -->
+  <label>查詢國家/地區：
+    <select id="nameSelect">
+      <option value="">請選擇</option>
+    </select>
+  </label>
+  <div id="queryResult"></div>
+
+  <script>
+    // 取得所有 name 並填入下拉選單
+    async function fetchNames() {
+      const res = await fetch('/api/names');
+      const names = await res.json();
+      const select = document.getElementById('nameSelect');
+      select.innerHTML = '<option value="">請選擇</option>';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
+    fetchNames();
+
+    // 下拉選單選擇時查詢該 name
+    document.getElementById('nameSelect').addEventListener('change', async function(e) {
+      const name = e.target.value;
+      const resultDiv = document.getElementById('queryResult');
+      if (!name) {
+        resultDiv.innerHTML = '';
+        return;
+      }
+      const res = await fetch(`/api/bigmac?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      if (data.length === 0) {
+        resultDiv.innerHTML = '查無資料';
+      } else {
+        // 只顯示指定欄位
+        let html = '<table border="1"><tr><th>日期</th><th>國家/地區</th><th>貨幣代碼</th><th>當地價格</th><th>匯率</th><th>美元價格</th></tr>';
+        data.forEach(row => {
+          html += `<tr><td>${row.date || ''}</td><td>${row.name}</td><td>${row.currency_code || ''}</td><td>${row.local_price}</td><td>${row.dollar_ex || ''}</td><td>${row.dollar_price}</td></tr>`;
+        });
+        html += '</table>';
+        resultDiv.innerHTML = html;
+      }
+    });
+  </script>
+</body>
+
+</html>

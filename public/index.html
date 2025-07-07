@@ -1,0 +1,461 @@
+<!--
+  Vue3 改寫查詢頁面
+  1. 使用 CDN 方式引入 Vue3
+  2. 以 table 呈現查詢結果
+  3. data: big mac index json 資料
+  4. method: 選擇 name 後自動 fetch /api/quotes
+  5. 每次修改皆有註解
+-->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>Big Mac Index 查詢 (Vue3)</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <!-- 修正：改用開發版本的 Vue3 CDN，便於調試錯誤 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- 修正：移除 Chart.js，圖表功能暫時改為開發中狀態 -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <!-- 修正：移除 Vue 3 圖表計算組合式函數 -->
+  <!-- <script src="/chart-computed-vue.js"></script> -->
+</head>
+<body>
+  <div id="app">
+    <h1>Big Mac Index 查詢 (Vue3)</h1>
+    <!-- 下拉選單，選擇國家/地區 -->
+    <label>查詢國家/地區：
+      <select v-model="selectedName" @change="fetchByName" class="custom-select">
+        <option value="">請選擇</option>
+        <option v-for="name in names" :key="name" :value="name">{{ name }}</option>
+      </select>
+    </label>
+    <!-- 新增：年份下拉選單，僅在已選擇國家/地區時顯示 -->
+    <label v-if="selectedName">選擇年份：
+      <select v-model="selectedYear">
+        <option value="">全部年份</option>
+        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+      </select>
+    </label>
+    <!-- 新增：比較下拉選單，僅在已選擇國家/地區時顯示 -->
+    <label v-if="selectedName">比較國家/地區：
+      <select v-model="compareCountry" @change="fetchCompareData" class="custom-select">
+        <option value="">請選擇比較對象</option>
+        <option v-for="name in names" :key="name" :value="name" :disabled="name === selectedName">{{ name }}</option>
+      </select>
+    </label>
+    <!-- 新增：排序選項，僅在有查詢結果時顯示 -->
+    <label v-if="result.length || compareResult.length">排序方式：
+      <select v-model="sortOrder" class="custom-select">
+        <option value="asc">日期升序</option>
+        <option value="desc">日期降序</option>
+      </select>
+    </label>
+    <!-- 新增：圖表模式切換按鈕，僅在有查詢結果時顯示 -->
+    <div v-if="result.length" class="chart-toggle">
+      <button @click="toggleChartMode" class="chart-btn">
+        {{ isChartMode ? '切換到表格模式' : '切換到圖表模式' }}
+      </button>
+    </div>
+    <!-- 查詢結果區域 -->
+    <div class="table-container" v-if="!isChartMode">
+      <!-- 主要查詢結果 table -->
+      <div class="table-section" v-if="result.length">
+        <h2>{{ selectedName }} 查詢結果</h2>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>國家/地區</th>
+              <th>貨幣代碼</th>
+              <th>當地價格</th>
+              <th>匯率</th>
+              <th>美元價格</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in sortedResult" :key="row.date + row.name">
+              <td>{{ row.date }}</td>
+              <td>{{ row.name }}</td>
+              <td>{{ row.currency_code }}</td>
+              <td>{{ row.local_price }}</td>
+              <td>{{ row.dollar_ex }}</td>
+              <td>{{ row.dollar_price }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else-if="selectedName" class="table-section">
+        <h2>{{ selectedName }} 查詢結果</h2>
+        <p>查無資料</p>
+      </div>
+
+      <!-- 比較結果 table，僅在有比較結果時顯示 -->
+      <div class="table-section" v-if="compareResult.length">
+        <h2>{{ compareCountry }} 比較結果</h2>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>國家/地區</th>
+              <th>貨幣代碼</th>
+              <th>當地價格</th>
+              <th>匯率</th>
+              <th>美元價格</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in sortedCompareResult" :key="row.date + row.name">
+              <td>{{ row.date }}</td>
+              <td>{{ row.name }}</td>
+              <td>{{ row.currency_code }}</td>
+              <td>{{ row.local_price }}</td>
+              <td>{{ row.dollar_ex }}</td>
+              <td>{{ row.dollar_price }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else-if="compareCountry" class="table-section">
+        <h2>{{ compareCountry }} 比較結果</h2>
+        <p>查無比較資料</p>
+      </div>
+    </div>
+
+    <!-- 新增：圖表模式容器 -->
+    <div class="chart-container" v-if="isChartMode && result.length">
+      <h2>{{ selectedName }} 價格走勢圖</h2>
+      <div class="development-notice">
+        <h3>🚧 功能開發中 🚧</h3>
+        <p>圖表功能正在開發中，敬請期待！</p>
+        <p>目前僅提供表格模式查看數據。</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .custom-select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      margin-left: 4px;
+    }
+    label {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    /* 新增：表格容器樣式 - 修改為左右並排 */
+    .table-container {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      margin-top: 16px;
+      align-items: flex-start;
+    }
+    /* 新增：單個表格區塊樣式 - 調整為等寬 */
+    .table-section {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 16px;
+      background-color: #fff;
+      flex: 1;
+      min-width: 0;
+    }
+    /* 新增：表格自適應寬度 */
+    .table-section table {
+      width: 100%;
+      font-size: 0.9rem;
+    }
+    /* 新增：響應式設計 - 小螢幕時垂直排列 */
+    @media (max-width: 768px) {
+      .table-container {
+        flex-direction: column;
+      }
+    }
+    /* 新增：圖表模式按鈕樣式 */
+    .chart-toggle {
+      margin: 16px 0;
+    }
+    .chart-btn {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .chart-btn:hover {
+      background-color: #0056b3;
+    }
+    /* 新增：圖表容器樣式 */
+    .chart-container {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    .chart-container canvas {
+      max-height: 400px;
+    }
+    /* 新增：開發中提示樣式 */
+    .development-notice {
+      padding: 16px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 8px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .development-notice h3 {
+      margin: 0 0 8px 0;
+      color: #856404;
+    }
+    .development-notice p {
+      margin: 0;
+      color: #856404;
+    }
+  </style>
+
+  <script>
+    // 修正：添加錯誤處理和 Vue 應用初始化檢查
+    try {
+      // 檢查 Vue 是否正確載入
+      if (typeof Vue === 'undefined') {
+        console.error('Vue 3 未正確載入，請檢查網路連線');
+        document.getElementById('app').innerHTML = '<h1>載入錯誤</h1><p>Vue 3 框架未正確載入，請檢查網路連線並重新整理頁面。</p>';
+        throw new Error('Vue 3 未載入');
+      }
+
+      console.log('Vue 3 已載入，版本:', Vue.version);
+
+      // 建立 Vue3 應用
+      const { createApp } = Vue;
+      const app = createApp({
+        data() {
+          return {
+            names: [], // 所有國家/地區名稱
+            years: [], // 該 name 對應的所有年份
+            selectedName: '', // 當前選擇的 name
+            selectedYear: '', // 當前選擇的年份
+            result: [], // 查詢結果
+            compareCountry: '', // 當前選擇的比較國家/地區
+            compareResult: [], // 比較查詢結果
+            sortOrder: 'asc', // 排序方式：'asc' 或 'desc'
+            isChartMode: false // 圖表模式開關（修正：移除 chart 實例，簡化為開發中狀態）
+          }
+        },
+        mounted() {
+          console.log('Vue 應用已掛載');
+          // 載入所有 name
+          this.fetchNames().catch(error => {
+            console.error('載入國家資料失敗:', error);
+          });
+        },
+        methods: {
+          // 取得所有 name
+          async fetchNames() {
+            try {
+              // 註解: 取得所有國家/地區名稱
+              const res = await fetch('/api/names');
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              }
+              this.names = await res.json();
+              console.log('成功載入', this.names.length, '個國家/地區');
+            } catch (error) {
+              console.error('fetchNames 錯誤:', error);
+              alert('無法載入國家資料，請檢查伺服器連線');
+            }
+          },
+          // 依 name 查詢，並取得年份
+          async fetchByName() {
+            try {
+              // 註解: 當選擇 name 或年份時自動查詢
+              if (!this.selectedName) {
+                this.result = [];
+                this.years = [];
+                this.selectedYear = '';
+                return;
+              }
+              // 查詢該 name 的所有資料
+              let url = `/api/bigmac?name=${encodeURIComponent(this.selectedName)}`;
+              const res = await fetch(url);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              }
+              let allData = await res.json();
+              // 僅保留正確 name 的資料（修正：確保只顯示選定國家資料）
+              allData = allData.filter(row => row.name === this.selectedName);
+
+              // 修正：去除重複資料，基於日期和國家組合的唯一性
+              const uniqueData = [];
+              const seenKeys = new Set();
+              allData.forEach(row => {
+                const key = `${row.date}-${row.name}`;
+                if (!seenKeys.has(key)) {
+                  seenKeys.add(key);
+                  uniqueData.push(row);
+                }
+              });
+
+              // 取得所有年份
+              const yearSet = new Set();
+              uniqueData.forEach(row => {
+                if (row.date && row.date.length >= 4) yearSet.add(row.date.slice(0, 4));
+              });
+              this.years = Array.from(yearSet).sort();
+              // 修正：若選擇了年份，則只顯示該年份資料
+              if (this.selectedYear) {
+                this.result = uniqueData.filter(row => row.date && row.date.startsWith(this.selectedYear));
+              } else {
+                this.result = uniqueData;
+              }
+              console.log('查詢結果:', this.result.length, '筆資料');
+            } catch (error) {
+              console.error('fetchByName 錯誤:', error);
+              alert('查詢資料失敗，請稍後再試');
+            }
+          },
+          // 新增：依比較國家查詢資料
+          async fetchCompareData() {
+            try {
+              // 註解: 查詢比較國家的資料
+              if (!this.compareCountry) {
+                this.compareResult = [];
+                return;
+              }
+
+              let url = `/api/bigmac?name=${encodeURIComponent(this.compareCountry)}`;
+              const res = await fetch(url);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              }
+              let allData = await res.json();
+              // 僅保留正確 name 的資料
+              allData = allData.filter(row => row.name === this.compareCountry);
+
+              // 去除重複資料
+              const uniqueData = [];
+              const seenKeys = new Set();
+              allData.forEach(row => {
+                const key = `${row.date}-${row.name}`;
+                if (!seenKeys.has(key)) {
+                  seenKeys.add(key);
+                  uniqueData.push(row);
+                }
+              });
+
+              // 若選擇了年份，則只顯示該年份資料
+              if (this.selectedYear) {
+                this.compareResult = uniqueData.filter(row => row.date && row.date.startsWith(this.selectedYear));
+              } else {
+                this.compareResult = uniqueData;
+              }
+              console.log('比較結果:', this.compareResult.length, '筆資料');
+            } catch (error) {
+              console.error('fetchCompareData 錯誤:', error);
+              alert('查詢比較資料失敗，請稍後再試');
+            }
+          },
+          // 新增：切換圖表模式
+          toggleChartMode() {
+            this.isChartMode = !this.isChartMode;
+            // 註解: 圖表功能暫時為開發中狀態，僅切換顯示模式
+            console.log('圖表模式:', this.isChartMode ? '開啟' : '關閉');
+          }
+        },
+        computed: {
+          // 根據選擇的排序方式返回排序後的結果
+          sortedResult() {
+            // 修正：先根據年份篩選，再進行排序
+            let filteredData = this.result;
+
+            // 如果選擇了年份，則只顯示該年份的資料
+            if (this.selectedYear) {
+              filteredData = this.result.filter(row =>
+                row.date && row.date.startsWith(this.selectedYear)
+              );
+            }
+
+            return filteredData.slice().sort((a, b) => {
+              const dateA = new Date(a.date);
+              const dateB = new Date(b.date);
+              return this.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+          },
+          // 新增：排序後的比較結果
+          sortedCompareResult() {
+            // 修正：先根據年份篩選，再進行排序
+            let filteredData = this.compareResult;
+
+            // 如果選擇了年份，則只顯示該年份的資料
+            if (this.selectedYear) {
+              filteredData = this.compareResult.filter(row =>
+                row.date && row.date.startsWith(this.selectedYear)
+              );
+            }
+
+            return filteredData.slice().sort((a, b) => {
+              const dateA = new Date(a.date);
+              const dateB = new Date(b.date);
+              return this.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+          }
+        },
+        watch: {
+          // 當選擇的 name 改變時，重設年份並自動查詢
+          selectedName(newVal, oldVal) {
+            // 修正：清空所有相關資料，避免殘留上次查詢結果
+            this.result = [];
+            this.years = [];
+            this.selectedYear = '';
+
+            if (newVal) {
+              this.fetchByName();
+            }
+          },
+          // 當年份變動時自動查詢
+          selectedYear(newVal, oldVal) {
+            // 修正：年份改變時立即重新查詢，確保資料正確更新
+            if (this.selectedName) {
+              this.fetchByName();
+            }
+            // 新增：年份變動時，同步更新比較國家的資料
+            if (this.compareCountry) {
+              this.fetchCompareData();
+            }
+          },
+          // 當比較國家變更時，自動查詢該國家資料
+          compareCountry(newVal, oldVal) {
+            if (newVal) {
+              this.fetchCompareData();
+            } else {
+              this.compareResult = [];
+            }
+          }
+        }
+      });
+
+      // 掛載應用並添加錯誤處理
+      const mountedApp = app.mount('#app');
+      console.log('Vue 應用成功掛載到 #app');
+
+    } catch (error) {
+      console.error('Vue 應用初始化失敗:', error);
+      // 提供備用的 HTML 內容
+      document.getElementById('app').innerHTML = `
+        <h1>應用載入失敗</h1>
+        <p>Vue 3 應用無法正確初始化，錯誤訊息：${error.message}</p>
+        <p>請嘗試以下解決方案：</p>
+        <ul>
+          <li>重新整理頁面</li>
+          <li>檢查網路連線</li>
+          <li>確認伺服器正在運行</li>
+        </ul>
+      `;
+    }
+  </script>
+</body>
+</html>
