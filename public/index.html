@@ -49,17 +49,17 @@
     <!-- 查詢選項結束 -->
 
     <!-- 修改：圖表容器移至表格前方 -->
-    <div class="chart-container" v-if="result.length">
-      <h2>{{ selectedName }} 價格走勢圖</h2>
+    <div class="chart-container enhanced-chart" v-if="result.length">
+      <h2 class="chart-title">{{ selectedName }} 價格走勢圖</h2>
       <!-- 新增：圖表 canvas 元素 -->
       <canvas id="bigmacChart"></canvas>
     </div>
 
-    <!-- 查詢結果區域 -->
-    <div class="table-container">
+    <!-- 查詢結果區域美化 -->
+    <div class="table-container enhanced-table">
       <!-- 主要查詢結果 table -->
       <div class="table-section" v-if="result.length">
-        <h2>{{ selectedName }} 查詢結果</h2>
+        <h2 class="table-title">{{ selectedName }} 查詢結果</h2>
         <table border="1">
           <thead>
             <tr>
@@ -84,12 +84,9 @@
         </table>
       </div>
       <div v-else-if="selectedName" class="table-section">
-        <h2>{{ selectedName }} 查詢結果</h2>
+        <h2 class="table-title">{{ selectedName }} 查詢結果</h2>
         <p>查無資料</p>
       </div>
-
-
-
     </div>
   </div>
 
@@ -198,6 +195,38 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+    /* 修改：圖表容器美化，標題更明顯，區塊加大圓角與陰影 */
+    .enhanced-chart {
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .chart-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 0 16px 0;
+      padding: 16px;
+      background: linear-gradient(90deg, #007bff, #00c853);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    /* 新增：查詢結果區域美化 */
+    .enhanced-table {
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .table-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 0 16px 0;
+      padding: 16px;
+      background: linear-gradient(90deg, #007bff, #00c853);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     @media (max-width: 600px) {
       .form-row {
