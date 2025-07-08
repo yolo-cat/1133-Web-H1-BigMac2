@@ -15,7 +15,8 @@
   - 價格走勢將第一期的價格定義為 1 ，後續價格為相對價格。將計算方法編寫在 `chart-computed.js` 中。
   - 當滑鼠移動到折線圖上的落點時，會顯示該期的 "Local_Price" 和 "變動幅度"。
 - [x] 將 `chart-computed.js` 改寫為 Vue 3 方式，並獨立實作，再引入 'index.html'。
-- 
+- [ ] index.html:選擇 name 國家後，產生輸入日期（date）和當地價格 (local_price) 的表單，不使用 action 
+  - 在 index.html 中，將上面表單的資料，透過 fetch async await 來發送 POST 請求到 /api/insert ，並在成功後，用 p 顯示伺服器回傳的【純文字】訊息，不是 json
 
 # 注意
 - 每次修改，必須在程式碼中加入註解。

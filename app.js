@@ -68,6 +68,28 @@ app.post('/api/update_local_price', (req, res) => {
     });
 });
 
+// 3. 新增資料 API：新增一筆 (date, local_price)
+// 注意：本 API 僅示範新增，實際應用可擴充欄位
+app.post('/api/update', (req, res) => {
+    // 從請求取得 date 與 local_price
+    const { date, local_price } = req.body;
+    // 檢查參數
+    if (!date || typeof local_price !== 'number') {
+        // 回傳文字訊息（非 JSON）
+        return res.status(400).send('請提供 date 與 local_price（數字）');
+    }
+    // 新增資料到 big_mac_index
+    const sql = 'INSERT INTO big_mac_index (date, local_price) VALUES (?, ?)';
+    db.run(sql, [date, local_price], function(err) {
+        if (err) {
+            // 回傳文字訊息（非 JSON）
+            return res.status(500).send('新增失敗: ' + err.message);
+        }
+        // 回傳成功訊息（非 JSON）
+        res.send(`成功新增一筆資料，ID: ${this.lastID}`);
+    });
+});
+
 // 取得所有 name（國家/地區）API
 app.get('/api/names', (req, res) => {
     db.all('SELECT DISTINCT name FROM big_mac_index ORDER BY name', [], (err, rows) => {
