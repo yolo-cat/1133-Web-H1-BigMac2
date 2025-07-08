@@ -219,14 +219,61 @@
       overflow: hidden;
       margin-top: 24px;
     }
+    /* 表格標題與表頭美化 */
     .table-title {
       font-size: 1.5rem;
       font-weight: bold;
       margin: 0 0 16px 0;
-      padding: 16px;
+      padding: 16px 0 8px 0;
       background: linear-gradient(90deg, #007bff, #00c853);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+      text-align: left;
+    }
+    .table-section table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #f8f9fa;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    .table-section th, .table-section td {
+      padding: 12px 8px;
+      text-align: center;
+      transition: background 0.2s;
+      font-size: 1.08rem;
+    }
+    .table-section th {
+      background: #007bff;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #00c853;
+    }
+    .table-section tr:nth-child(even) {
+      background: #f1f3f4;
+    }
+    .table-section tr:hover {
+      background: #e3eafc;
+    }
+    .table-section td {
+      color: #222;
+      font-weight: 500;
+    }
+    /* 響應式表格 */
+    @media (max-width: 768px) {
+      .table-section table, .table-section th, .table-section td {
+        font-size: 1rem;
+      }
+      .table-section table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
     }
     @media (max-width: 600px) {
       .form-row {
