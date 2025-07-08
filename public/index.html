@@ -22,27 +22,31 @@
 <body>
   <div id="app">
     <h1>Big Mac Index 查詢 (Vue3)</h1>
-    <!-- 下拉選單，選擇國家/地區 -->
-    <label>查詢國家/地區：
-      <select v-model="selectedName" @change="fetchByName" class="custom-select">
-        <option value="">請選擇</option>
-        <option v-for="name in names" :key="name" :value="name">{{ name }}</option>
-      </select>
-    </label>
-    <!-- 新增：年份下拉選單，僅在已選擇國家/地區時顯示 -->
-    <label v-if="selectedName">選擇年份：
-      <select v-model="selectedYear">
-        <option value="">全部年份</option>
-        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-      </select>
-    </label>
+    <!-- 查詢選項區域 -->
+    <div class="form-row">
+      <!-- 下拉選單，選擇國家/地區 -->
+      <label>查詢國家/地區：
+        <select v-model="selectedName" @change="fetchByName" class="custom-select">
+          <option value="">請選擇</option>
+          <option v-for="name in names" :key="name" :value="name">{{ name }}</option>
+        </select>
+      </label>
+      <!-- 新增：年份下拉選單，僅在已選擇國家/地區時顯示 -->
+      <label v-if="selectedName">選擇年份：
+        <select v-model="selectedYear" class="custom-select">
+          <option value="">全部年份</option>
+          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+        </select>
+      </label>
 
-    <label v-if="result.length || compareResult.length">排序方式：
-      <select v-model="sortOrder" class="custom-select">
-        <option value="asc">日期升序</option>
-        <option value="desc">日期降序</option>
-      </select>
-    </label>
+      <label v-if="result.length || compareResult.length">排序方式：
+        <select v-model="sortOrder" class="custom-select">
+          <option value="asc">日期升序</option>
+          <option value="desc">日期降序</option>
+        </select>
+      </label>
+    </div>
+    <!-- 查詢選項結束 -->
 
     <!-- 修改：圖表容器移至表格前方 -->
     <div class="chart-container" v-if="result.length">
@@ -159,6 +163,52 @@
     .development-notice p {
       margin: 0;
       color: #856404;
+    }
+    /* 強制下拉選單字體與字型大小一致 */
+    .custom-select, select {
+      font-size: 1rem;
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid #b0b0b0;
+      background: #fff;
+      transition: border 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .custom-select:focus, .custom-select:hover, select:focus, select:hover {
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px #cce1ff;
+      outline: none;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-bottom: 18px;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 16px 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .form-row label {
+      font-weight: bold;
+      font-size: 1.08rem;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+      }
+      .form-row label {
+        width: 100%;
+        justify-content: flex-start;
+      }
     }
   </style>
 
