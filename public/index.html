@@ -187,6 +187,7 @@
       padding: 16px 18px;
       border-radius: 10px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      justify-content: center; /* 置中內容 */
     }
     .form-row label {
       font-weight: bold;
@@ -195,6 +196,19 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+    /* 置中查詢表單區塊 */
+    .centered-form-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      width: 100%;
+    }
+    /* 置中標題 */
+    h1 {
+      text-align: center;
     }
     /* 修改：圖表容器美化，標題更明顯，區塊加大圓角與陰影 */
     .enhanced-chart {
