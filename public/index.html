@@ -37,12 +37,12 @@
       </select>
     </label>
     <!-- 新增：比較下拉選單，僅在已選擇國家/地區時顯示 -->
-    <label v-if="selectedName">比較國家/地區：
-      <select v-model="compareCountry" @change="fetchCompareData" class="custom-select">
-        <option value="">請選擇比較對象</option>
-        <option v-for="name in names" :key="name" :value="name" :disabled="name === selectedName">{{ name }}</option>
-      </select>
-    </label>
+<!--    <label v-if="selectedName">比較國家/地區：-->
+<!--      <select v-model="compareCountry" @change="fetchCompareData" class="custom-select">-->
+<!--        <option value="">請選擇比較對象</option>-->
+<!--        <option v-for="name in names" :key="name" :value="name" :disabled="name === selectedName">{{ name }}</option>-->
+<!--      </select>-->
+<!--    </label>-->
     <!-- 新增：排序選項，僅在有查詢結果時顯示 -->
     <label v-if="result.length || compareResult.length">排序方式：
       <select v-model="sortOrder" class="custom-select">
