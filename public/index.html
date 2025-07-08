@@ -36,14 +36,7 @@
         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
       </select>
     </label>
-    <!-- 新增：比較下拉選單，僅在已選擇國家/地區時顯示 -->
-<!--    <label v-if="selectedName">比較國家/地區：-->
-<!--      <select v-model="compareCountry" @change="fetchCompareData" class="custom-select">-->
-<!--        <option value="">請選擇比較對象</option>-->
-<!--        <option v-for="name in names" :key="name" :value="name" :disabled="name === selectedName">{{ name }}</option>-->
-<!--      </select>-->
-<!--    </label>-->
-    <!-- 新增：排序選項，僅在有查詢結果時顯示 -->
+
     <label v-if="result.length || compareResult.length">排序方式：
       <select v-model="sortOrder" class="custom-select">
         <option value="asc">日期升序</option>
@@ -91,40 +84,15 @@
         <p>查無資料</p>
       </div>
 
-      <!-- 比較結果 table，僅在有比較結果時顯示 -->
-      <div class="table-section" v-if="compareResult.length">
-        <h2>{{ compareCountry }} 比較結果</h2>
-        <table border="1">
-          <thead>
-            <tr>
-              <th>日期</th>
-              <th>國家/地區</th>
-              <th>貨幣代碼</th>
-              <th>當地價格</th>
-              <th>匯率</th>
-              <th>美元價格</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in sortedCompareResult" :key="row.date + row.name">
-              <td>{{ row.date }}</td>
-              <td>{{ row.name }}</td>
-              <td>{{ row.currency_code }}</td>
-              <td>{{ row.local_price }}</td>
-              <td>{{ row.dollar_ex }}</td>
-              <td>{{ row.dollar_price }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else-if="compareCountry" class="table-section">
-        <h2>{{ compareCountry }} 比較結果</h2>
-        <p>查無比較資料</p>
-      </div>
+
+
     </div>
   </div>
 
   <style>
+    body, html, .surface-0, .p-card, .p-panel, .p-dropdown, .p-datatable, .table-container, .table-section, table, th, td, input, select, button {
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif !important;
+    }
     .custom-select {
       padding: 4px 8px;
       border-radius: 4px;
