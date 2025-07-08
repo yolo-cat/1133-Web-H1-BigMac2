@@ -50,14 +50,16 @@
         <option value="desc">日期降序</option>
       </select>
     </label>
-    <!-- 新增：圖表模式切換按鈕，僅在有查詢結果時顯示 -->
-    <div v-if="result.length" class="chart-toggle">
-      <button @click="toggleChartMode" class="chart-btn">
-        {{ isChartMode ? '切換到表格模式' : '切換到圖表模式' }}
-      </button>
+
+    <!-- 修改：圖表容器移至表格前方 -->
+    <div class="chart-container" v-if="result.length">
+      <h2>{{ selectedName }} 價格走勢圖</h2>
+      <!-- 新增：圖表 canvas 元素 -->
+      <canvas id="bigmacChart"></canvas>
     </div>
+
     <!-- 查詢結果區域 -->
-    <div class="table-container" v-if="!isChartMode">
+    <div class="table-container">
       <!-- 主要查詢結果 table -->
       <div class="table-section" v-if="result.length">
         <h2>{{ selectedName }} 查詢結果</h2>
@@ -120,13 +122,6 @@
         <p>查無比較資料</p>
       </div>
     </div>
-
-    <!-- 新增：圖表模式容器 -->
-    <div class="chart-container" v-if="isChartMode && result.length">
-      <h2>{{ selectedName }} 價格走勢圖</h2>
-      <!-- 新增：圖表 canvas 元素 -->
-      <canvas id="bigmacChart"></canvas>
-    </div>
   </div>
 
   <style>
@@ -168,22 +163,6 @@
       .table-container {
         flex-direction: column;
       }
-    }
-    /* 新增：圖表模式按鈕樣式 */
-    .chart-toggle {
-      margin: 16px 0;
-    }
-    .chart-btn {
-      padding: 8px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .chart-btn:hover {
-      background-color: #0056b3;
     }
     /* 新增：圖表容器樣式 */
     .chart-container {
@@ -240,7 +219,7 @@
             compareCountry: '', // 當前選擇的比較國家/地區
             compareResult: [], // 比較查詢結果
             sortOrder: 'asc', // 排序方式：'asc' 或 'desc'
-            isChartMode: false, // 圖表模式開關（修正：移除 chart 實例，簡化為開發中狀態）
+            // 移除：isChartMode 變數，因為表格和圖表現在同時顯示
             chartInstance: null // 新增：Chart.js 實例
           }
         },
@@ -361,70 +340,89 @@
           renderChart() {
             // 註解：繪製 Chart.js 折線圖，顯示主國家與比較國家 local_price 走勢
             const ctx = document.getElementById('bigmacChart');
-            if (!ctx) return;
+            if (!ctx) {
+              console.log('找不到圖表 canvas 元素');
+              return;
+            }
+
+            // 檢查是否有資料
+            if (!this.sortedResult || this.sortedResult.length === 0) {
+              console.log('沒有資料可顯示圖表');
+              return;
+            }
+
             // 銷毀舊圖表
             if (this.chartInstance) {
               this.chartInstance.destroy();
+              this.chartInstance = null;
             }
+
             // 準備主國家資料
-            const mainData = this.sortedResult.map(row => ({
-              x: row.date,
-              y: row.local_price
-            }));
-            // 準備比較國家資料
-            const compareData = this.sortedCompareResult.map(row => ({
-              x: row.date,
-              y: row.local_price
-            }));
-            // 準備 labels（以主國家為主）
+            const mainData = this.sortedResult.map(row => row.local_price);
             const labels = this.sortedResult.map(row => row.date);
+
+            // 準備比較國家資料
+            const compareData = this.sortedCompareResult.map(row => row.local_price);
+
+            console.log('主國家資料:', mainData);
+            console.log('標籤:', labels);
+            console.log('比較國家資料:', compareData);
+
             // Chart.js 配置
-            this.chartInstance = new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: labels,
-                datasets: [
-                  {
-                    label: this.selectedName,
-                    data: mainData.map(d => d.y),
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0,123,255,0.1)',
-                    tension: 0.2,
-                    fill: false
-                  },
-                  ...(this.compareCountry && this.sortedCompareResult.length ? [{
-                    label: this.compareCountry,
-                    data: compareData.map(d => d.y),
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255,152,0,0.1)',
-                    tension: 0.2,
-                    fill: false
-                  }] : [])
-                ]
-              },
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: { display: true },
-                  title: { display: true, text: 'Big Mac 當地價格走勢' }
-                },
-                scales: {
-                  x: { title: { display: true, text: '日期' } },
-                  y: { title: { display: true, text: '當地價格' } }
-                }
+            const datasets = [
+              {
+                label: this.selectedName,
+                data: mainData,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0,123,255,0.1)',
+                tension: 0.2,
+                fill: false
               }
-            });
-          },
-          // 新增：切換圖表模式
-          toggleChartMode() {
-            this.isChartMode = !this.isChartMode;
-            if (this.isChartMode) {
-              this.$nextTick(() => {
-                this.renderChart();
+            ];
+
+            // 如果有比較國家資料，加入比較線
+            if (this.compareCountry && this.sortedCompareResult.length > 0) {
+              datasets.push({
+                label: this.compareCountry,
+                data: compareData,
+                borderColor: '#ff9800',
+                backgroundColor: 'rgba(255,152,0,0.1)',
+                tension: 0.2,
+                fill: false
               });
             }
-            // 註解: 圖表功能暫時為開發中狀態，僅切換顯示模式
-            console.log('圖表模式:', this.isChartMode ? '開啟' : '關閉');
+
+            try {
+              this.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: labels,
+                  datasets: datasets
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true },
+                    title: {
+                      display: true,
+                      text: 'Big Mac 當地價格走勢'
+                    }
+                  },
+                  scales: {
+                    x: {
+                      title: { display: true, text: '日期' }
+                    },
+                    y: {
+                      title: { display: true, text: '當地價格' }
+                    }
+                  }
+                }
+              });
+              console.log('圖表已成功建立');
+            } catch (error) {
+              console.error('建立圖表時發生錯誤:', error);
+            }
           }
         },
         computed: {
@@ -476,6 +474,13 @@
             if (newVal) {
               this.fetchByName();
             }
+            // 修正：確保切換國家時立即更新圖表（移除 isChartMode 條件）
+            if (newVal) {
+              this.$nextTick(() => {
+                // 等待資料載入完成後再渲染圖表
+                setTimeout(() => this.renderChart(), 100);
+              });
+            }
           },
           // 當年份變動時自動查詢
           selectedYear(newVal, oldVal) {
@@ -487,6 +492,13 @@
             if (this.compareCountry) {
               this.fetchCompareData();
             }
+            // 修正：確保年份變動時立即更新圖表（移除 isChartMode 條件）
+            if (this.selectedName) {
+              this.$nextTick(() => {
+                // 等待資料載入完成後再渲染圖表
+                setTimeout(() => this.renderChart(), 100);
+              });
+            }
           },
           // 當比較國家變更時，自動查詢該國家資料
           compareCountry(newVal, oldVal) {
@@ -495,19 +507,27 @@
             } else {
               this.compareResult = [];
             }
+            // 修正：比較國家變動時立即更新圖表（移除 isChartMode 條件）
+            if (this.selectedName) {
+              this.$nextTick(() => {
+                // 等待資料載入完成後再渲染圖表
+                setTimeout(() => this.renderChart(), 100);
+              });
+            }
           },
-          // 新增：資料變動時自動重繪圖表
+          // 當排序方式變動時立即更新圖表
+          sortOrder(newVal, oldVal) {
+            // 修正：排序方式變動時立即更新圖表（移除 isChartMode 條件）
+            if (this.result.length) {
+              this.$nextTick(() => this.renderChart());
+            }
+          },
+          // 修正：資料變動時自動重繪圖表（移除 isChartMode 條件）
           result() {
-            if (this.isChartMode) this.$nextTick(() => this.renderChart());
+            this.$nextTick(() => this.renderChart());
           },
           compareResult() {
-            if (this.isChartMode) this.$nextTick(() => this.renderChart());
-          },
-          sortOrder() {
-            if (this.isChartMode) this.$nextTick(() => this.renderChart());
-          },
-          selectedYear() {
-            if (this.isChartMode) this.$nextTick(() => this.renderChart());
+            this.$nextTick(() => this.renderChart());
           }
         }
       });
