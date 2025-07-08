@@ -14,8 +14,8 @@
   <link rel="stylesheet" href="/stylesheets/style.css">
   <!-- 修正：改用開發版本的 Vue3 CDN，便於調試錯誤 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <!-- 修正：移除 Chart.js，圖表功能暫時改為開發中狀態 -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <!-- 新增：引入 Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- 修正：移除 Vue 3 圖表計算組合式函數 -->
   <!-- <script src="/chart-computed-vue.js"></script> -->
 </head>
@@ -124,11 +124,8 @@
     <!-- 新增：圖表模式容器 -->
     <div class="chart-container" v-if="isChartMode && result.length">
       <h2>{{ selectedName }} 價格走勢圖</h2>
-      <div class="development-notice">
-        <h3>🚧 功能開發中 🚧</h3>
-        <p>圖表功能正在開發中，敬請期待！</p>
-        <p>目前僅提供表格模式查看數據。</p>
-      </div>
+      <!-- 新增：圖表 canvas 元素 -->
+      <canvas id="bigmacChart"></canvas>
     </div>
   </div>
 
@@ -243,7 +240,8 @@
             compareCountry: '', // 當前選擇的比較國家/地區
             compareResult: [], // 比較查詢結果
             sortOrder: 'asc', // 排序方式：'asc' 或 'desc'
-            isChartMode: false // 圖表模式開關（修正：移除 chart 實例，簡化為開發中狀態）
+            isChartMode: false, // 圖表模式開關（修正：移除 chart 實例，簡化為開發中狀態）
+            chartInstance: null // 新增：Chart.js 實例
           }
         },
         mounted() {
@@ -359,9 +357,72 @@
               alert('查詢比較資料失敗，請稍後再試');
             }
           },
+          // 新增：根據查詢結果繪製主國家與比較國家的價格走勢
+          renderChart() {
+            // 註解：繪製 Chart.js 折線圖，顯示主國家與比較國家 local_price 走勢
+            const ctx = document.getElementById('bigmacChart');
+            if (!ctx) return;
+            // 銷毀舊圖表
+            if (this.chartInstance) {
+              this.chartInstance.destroy();
+            }
+            // 準備主國家資料
+            const mainData = this.sortedResult.map(row => ({
+              x: row.date,
+              y: row.local_price
+            }));
+            // 準備比較國家資料
+            const compareData = this.sortedCompareResult.map(row => ({
+              x: row.date,
+              y: row.local_price
+            }));
+            // 準備 labels（以主國家為主）
+            const labels = this.sortedResult.map(row => row.date);
+            // Chart.js 配置
+            this.chartInstance = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: labels,
+                datasets: [
+                  {
+                    label: this.selectedName,
+                    data: mainData.map(d => d.y),
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0,123,255,0.1)',
+                    tension: 0.2,
+                    fill: false
+                  },
+                  ...(this.compareCountry && this.sortedCompareResult.length ? [{
+                    label: this.compareCountry,
+                    data: compareData.map(d => d.y),
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255,152,0,0.1)',
+                    tension: 0.2,
+                    fill: false
+                  }] : [])
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: true },
+                  title: { display: true, text: 'Big Mac 當地價格走勢' }
+                },
+                scales: {
+                  x: { title: { display: true, text: '日期' } },
+                  y: { title: { display: true, text: '當地價格' } }
+                }
+              }
+            });
+          },
           // 新增：切換圖表模式
           toggleChartMode() {
             this.isChartMode = !this.isChartMode;
+            if (this.isChartMode) {
+              this.$nextTick(() => {
+                this.renderChart();
+              });
+            }
             // 註解: 圖表功能暫時為開發中狀態，僅切換顯示模式
             console.log('圖表模式:', this.isChartMode ? '開啟' : '關閉');
           }
@@ -434,6 +495,19 @@
             } else {
               this.compareResult = [];
             }
+          },
+          // 新增：資料變動時自動重繪圖表
+          result() {
+            if (this.isChartMode) this.$nextTick(() => this.renderChart());
+          },
+          compareResult() {
+            if (this.isChartMode) this.$nextTick(() => this.renderChart());
+          },
+          sortOrder() {
+            if (this.isChartMode) this.$nextTick(() => this.renderChart());
+          },
+          selectedYear() {
+            if (this.isChartMode) this.$nextTick(() => this.renderChart());
           }
         }
       });
