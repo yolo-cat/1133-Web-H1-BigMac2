@@ -11,6 +11,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Big Mac Index 查詢 (Vue3)</title>
+  <meta name="description" content="由經濟學人編製，了解各國大麥克漢堡價格與貨幣比較。資料來源：https://github.com/TheEconomist/big-mac-data">
   <link rel="stylesheet" href="/stylesheets/style.css">
   <!-- 修正：改用開發版本的 Vue3 CDN，便於調試錯誤 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -22,6 +23,16 @@
 <body>
   <div id="app">
     <h1>Big Mac Index 查詢 (Vue3)</h1>
+    <!-- 在 <h1>Big Mac Index 查詢 (Vue3)</h1> 後添加 -->
+    <div class="intro-section">
+      <p>
+        <strong>大麥克指數（Big Mac Index）</strong>由《經濟學人》雜誌編製，透過比較各國大麥克漢堡的價格來衡量貨幣的購買力平價（PPP）。
+        這個指數以一種簡單易懂的方式幫助了解不同國家貨幣的相對價值。
+      </p>
+      <p class="data-source">
+        資料來源：<a href="https://github.com/TheEconomist/big-mac-data" target="_blank" rel="noopener">The Economist Big Mac Data</a>
+      </p>
+    </div>
     <!-- 查詢選項區域 -->
     <div class="form-row">
       <!-- 下拉選單，選擇國家/地區 -->
@@ -91,6 +102,42 @@
   </div>
 
   <style>
+
+    /* 介绍区块样式 */
+    .intro-section {
+      max-width: 800px;
+      margin: 0 auto 24px auto;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    .intro-section p {
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .intro-section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .data-source {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .data-source a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .data-source a:hover {
+      text-decoration: underline;
+    }
+
     body, html, .surface-0, .p-card, .p-panel, .p-dropdown, .p-datatable, .table-container, .table-section, table, th, td, input, select, button {
       font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif !important;
     }
