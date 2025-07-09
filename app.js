@@ -134,6 +134,9 @@ app.get('/api/latest-usd-adjusted', (req, res) => {
     });
 });
 
+const indexRouter = require('./routes/index');
+app.use('/', indexRouter);
+
 // 註解: 移除直接啟動服務器的代碼，改為匯出 app 實例
 // const PORT = 3000;
 // app.listen(PORT, () => {

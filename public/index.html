@@ -64,46 +64,121 @@
     <div class="stats-cards-container" v-if="globalStats.hasData">
       <div class="stats-grid">
         <div class="stat-card most-expensive">
-          <div class="card-header">
-            <h3>💰 最貴大麥克</h3>
-            <span class="card-subtitle">美元價格最高</span>
-          </div>
-          <div class="card-content">
-            <div class="main-value">${{ globalStats.mostExpensive.dollar_price }}</div>
-            <div class="country-name">{{ globalStats.mostExpensive.name }}</div>
-            <div class="additional-info">
-              <span class="local-price">{{ globalStats.mostExpensive.local_price }} {{ globalStats.mostExpensive.currency_code }}</span>
-              <span class="date">{{ globalStats.date }}</span>
+          <div class="card-flip-container">
+            <!-- 卡片正面 -->
+            <div class="card-face card-front">
+              <div class="card-header">
+                <h3>💰 最貴大麥克</h3>
+                <span class="card-subtitle">美元價格最高</span>
+              </div>
+              <div class="card-content">
+                <div class="main-value">${{ globalStats.mostExpensive.dollar_price }}</div>
+                <div class="country-name">{{ globalStats.mostExpensive.name }}</div>
+                <div class="additional-info">
+                  <span class="local-price">{{ globalStats.mostExpensive.local_price }} {{ globalStats.mostExpensive.currency_code }}</span>
+                  <span class="date">{{ globalStats.date }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- 卡片背面 -->
+            <div class="card-face card-back">
+              <div class="card-explanation">
+                <h4>💰 最貴大麥克解析</h4>
+                <p class="explanation-text">
+                  <strong>{{ globalStats.mostExpensive.name }}</strong> 擁有全球最昂貴的大麥克漢堡，
+                  美元價格達到 <strong>${{ globalStats.mostExpensive.dollar_price }}</strong>。
+                </p>
+                <p class="explanation-detail">
+                  這通常反映了該國較高的生活成本、人力成本，或是當地貨幣相對於美元的強勢地位。
+                  高價格也可能與當地的經濟發展水準、通膨率以及麥當勞的定價策略有關。
+                </p>
+                <div class="back-stats">
+                  <div class="back-stat-item">
+                    <span class="label">當地價格</span>
+                    <span class="value">{{ globalStats.mostExpensive.local_price }} {{ globalStats.mostExpensive.currency_code }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="stat-card cheapest">
-          <div class="card-header">
-            <h3>🏷️ 最便宜大麥克</h3>
-            <span class="card-subtitle">美元價格最低</span>
-          </div>
-          <div class="card-content">
-            <div class="main-value">${{ globalStats.cheapest.dollar_price }}</div>
-            <div class="country-name">{{ globalStats.cheapest.name }}</div>
-            <div class="additional-info">
-              <span class="local-price">{{ globalStats.cheapest.local_price }} {{ globalStats.cheapest.currency_code }}</span>
-              <span class="date">{{ globalStats.date }}</span>
+          <div class="card-flip-container">
+            <!-- 卡片正面 -->
+            <div class="card-face card-front">
+              <div class="card-header">
+                <h3>🏷️ 最便宜大麥克</h3>
+                <span class="card-subtitle">美元價格最低</span>
+              </div>
+              <div class="card-content">
+                <div class="main-value">${{ globalStats.cheapest.dollar_price }}</div>
+                <div class="country-name">{{ globalStats.cheapest.name }}</div>
+                <div class="additional-info">
+                  <span class="local-price">{{ globalStats.cheapest.local_price }} {{ globalStats.cheapest.currency_code }}</span>
+                  <span class="date">{{ globalStats.date }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- 卡片背面 -->
+            <div class="card-face card-back">
+              <div class="card-explanation">
+                <h4>🏷️ 最便宜大麥克解析</h4>
+                <p class="explanation-text">
+                  <strong>{{ globalStats.cheapest.name }}</strong> 提供全球最便宜的大麥克漢堡，
+                  美元價格僅為 <strong>${{ globalStats.cheapest.dollar_price }}</strong>。
+                </p>
+                <p class="explanation-detail">
+                  低價格通常代表該國較低的人力成本、租金成本，或是當地貨幣相對疲弱。
+                  這也可能反映當地消費者的購買力水準，以及麥當勞為適應當地市場而調整的定價策略。
+                </p>
+                <div class="back-stats">
+                  <div class="back-stat-item">
+                    <span class="label">當地價格</span>
+                    <span class="value">{{ globalStats.cheapest.local_price }} {{ globalStats.cheapest.currency_code }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="stat-card best-value">
-          <div class="card-header">
-            <h3>🎯 大麥克最超值</h3>
-            <span class="card-subtitle">USD調整值最低</span>
-          </div>
-          <div class="card-content">
-            <div class="main-value">{{ (globalStats.bestValue.percentageDeviation >= 0 ? '+' : '') + globalStats.bestValue.percentageDeviation.toFixed(1) }}%</div>
-            <div class="country-name">{{ globalStats.bestValue.name }}</div>
-            <div class="additional-info">
-              <span class="local-price">${{ globalStats.bestValue.dollar_price }} USD</span>
-              <span class="date">{{ globalStats.date }}</span>
+          <div class="card-flip-container">
+            <!-- 卡片正面 -->
+            <div class="card-face card-front">
+              <div class="card-header">
+                <h3>🎯 最超值大麥克</h3>
+                <span class="card-subtitle">USD調整值最低</span>
+              </div>
+              <div class="card-content">
+                <div class="main-value">{{ (globalStats.bestValue.percentageDeviation >= 0 ? '+' : '') + globalStats.bestValue.percentageDeviation.toFixed(1) }}%</div>
+                <div class="country-name">{{ globalStats.bestValue.name }}</div>
+                <div class="additional-info">
+                  <span class="local-price">${{ globalStats.bestValue.dollar_price }} USD</span>
+                  <span class="date">{{ globalStats.date }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- 卡片背面 -->
+            <div class="card-face card-back">
+              <div class="card-explanation">
+                <h4>🎯 最超值大麥克解析</h4>
+                <p class="explanation-text">
+                  <strong>{{ globalStats.bestValue.name }}</strong> 的大麥克相對於購買力平價而言最為超值，
+                  USD調整偏差為 <strong>{{ (globalStats.bestValue.percentageDeviation >= 0 ? '+' : '') + globalStats.bestValue.percentageDeviation.toFixed(1) }}%</strong>。
+                </p>
+                <p class="explanation-detail">
+                  負值表示該國貨幣被低估，意味著以當地收入水準來看，大麥克的價格相對便宜。
+                  這個指標考慮了當地的經濟條件和購買力，是衡量「真實價值」的重要參考。
+                </p>
+                <div class="back-stats">
+                  <div class="back-stat-item">
+                    <span class="label">美元價格</span>
+                    <span class="value">${{ globalStats.bestValue.dollar_price }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -972,15 +1047,15 @@
       margin-bottom: var(--spacing-sm);
     }
 
-    .legend-items .legend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--spacing-xs);
-      padding: var(--spacing-xs);
-      border-radius: var(--radius-xs);
-      transition: var(--transition-fast);
-    }
+    /*.legend-items .legend-item {*/
+    /*  display: flex;*/
+    /*  align-items: center;*/
+    /*  justify-content: space-between;*/
+    /*  margin-bottom: var(--spacing-xs);*/
+    /*  padding: var(--spacing-xs);*/
+    /*  border-radius: var(--radius-xs);*/
+    /*  transition: var(--transition-fast);*/
+    /*}*/
 
     .legend-items .legend-item:hover {
       background: var(--gray-50);
@@ -1100,11 +1175,11 @@
       text-align: center;
     }
 
-    .error-message {
-      color: var(--red-600);
-      background: rgba(220, 53, 69, 0.05);
-      border-color: rgba(220, 53, 69, 0.2);
-    }
+    /*.error-message {*/
+    /*  color: var(--red-600);*/
+    /*  background: rgba(220, 53, 69, 0.05);*/
+    /*  border-color: rgba(220, 53, 69, 0.2);*/
+   
 
     /* 19. 響應式設計優化 */
     @media (max-width: 768px) {
@@ -1214,38 +1289,75 @@
     }
 
     .stat-card {
-      background: var(--white);
+      background: transparent;
+      border-radius: var(--radius-xl);
+      overflow: visible;
+      position: relative;
+      height: 280px;
+      perspective: 1000px;
+    }
+
+    /* 翻頁容器 */
+    .card-flip-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .stat-card:hover .card-flip-container {
+      transform: rotateY(180deg);
+    }
+
+    /* 卡片正面和背面共通樣式 */
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-lg);
       border: 1px solid var(--gray-200);
+      background: var(--white);
       overflow: hidden;
-      transition: var(--transition-normal);
-      position: relative;
     }
 
-    .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-xl);
+    /* 卡片正面 */
+    .card-front {
+      transform: rotateY(0deg);
     }
 
-    .stat-card::before {
+    /* 卡片背面 */
+    .card-back {
+      transform: rotateY(180deg);
+      padding: var(--spacing-xl);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* 保持原有的頂部色條效果 */
+    .card-face::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 4px;
+      z-index: 1;
     }
 
-    .stat-card.most-expensive::before {
+    .stat-card.most-expensive .card-face::before {
       background: linear-gradient(90deg, #dc3545 0%, #e74c3c 100%);
     }
 
-    .stat-card.cheapest::before {
+    .stat-card.cheapest .card-face::before {
       background: linear-gradient(90deg, #28a745 0%, #2ecc71 100%);
     }
 
-    .stat-card.best-value::before {
+    .stat-card.best-value .card-face::before {
       background: linear-gradient(90deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
     }
 
@@ -1330,6 +1442,100 @@
       font-size: var(--font-size-xs);
       color: var(--gray-500);
       font-style: italic;
+    }
+
+    /* 卡片背面解釋內容樣式 */
+    .card-explanation {
+      text-align: left;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-explanation h4 {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      margin-bottom: var(--spacing-lg);
+      text-align: center;
+      color: var(--gray-800);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .explanation-text {
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: var(--spacing-md);
+      color: var(--gray-800);
+    }
+
+    .explanation-detail {
+      font-size: var(--font-size-sm);
+      line-height: 1.6;
+      color: var(--gray-700);
+      margin-bottom: var(--spacing-lg);
+      flex-grow: 1;
+    }
+
+    .back-stats {
+      margin-top: auto;
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .back-stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .back-stat-item .label {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    .back-stat-item .value {
+      font-size: var(--font-size-sm);
+      color: var(--gray-800);
+      font-weight: 600;
+    }
+
+    /* 卡片懸停提示 */
+    .stat-card::after {
+      content: '懸停查看詳細解析 🔄';
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--font-size-xs);
+      color: var(--gray-500);
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .stat-card:hover::after {
+      opacity: 1;
+    }
+
+    /* 翻轉動畫優化 */
+    @media (prefers-reduced-motion: no-preference) {
+      .card-flip-container {
+        transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        transition: transform var(--transition-normal);
+      }
     }
 
     /* 23. 統計卡片響應式設計 */

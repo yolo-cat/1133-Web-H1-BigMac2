@@ -116,7 +116,7 @@ router.get('/api/latest-usd-adjusted', function(req, res, next) {
 /* API: 取得全球大麥克統計資料（最貴、最便宜、最超值） */
 router.get('/api/global-stats', function(req, res, next) {
   // 先獲取最新日期
-  const latestDateSql = 'SELECT MAX(date) as latest_date FROM bigmac WHERE dollar_price IS NOT NULL AND USD_adjusted IS NOT NULL';
+  const latestDateSql = 'SELECT MAX(date) as latest_date FROM big_mac_index WHERE dollar_price IS NOT NULL AND USD_adjusted IS NOT NULL';
 
   db.get(latestDateSql, [], (err, dateRow) => {
     if (err) {
@@ -140,7 +140,7 @@ router.get('/api/global-stats', function(req, res, next) {
         local_price,
         currency_code,
         USD_adjusted
-      FROM bigmac 
+      FROM big_mac_index 
       WHERE date = ? 
         AND dollar_price IS NOT NULL 
         AND USD_adjusted IS NOT NULL
@@ -379,6 +379,43 @@ router.get('/api/currency-classification', function(req, res, next) {
     };
 
     res.json(response);
+  });
+});
+
+/* API: 取得最新一筆 USD_adjusted 最低（最超值）的大麥克資料 */
+router.get('/api/best-value', function(req, res, next) {
+  // 1. 查詢最新日期
+  const latestDateSql = 'SELECT MAX(date) as latest_date FROM big_mac_index WHERE USD_adjusted IS NOT NULL';
+  db.get(latestDateSql, [], (err, row) => {
+    if (err) {
+      console.error('取得最新日期錯誤:', err.message);
+      res.status(500).json({ error: '資料庫查詢失敗' });
+      return;
+    }
+    if (!row || !row.latest_date) {
+      res.status(404).json({ error: '找不到有效的資料' });
+      return;
+    }
+    const latestDate = row.latest_date;
+    // 2. 查詢該日期所有資料，取 USD_adjusted 最小者
+    const sql = `
+      SELECT name, dollar_price, local_price, currency_code, USD_adjusted, date
+      FROM big_mac_index
+      WHERE date = ? AND USD_adjusted IS NOT NULL
+      ORDER BY USD_adjusted ASC LIMIT 1
+    `;
+    db.get(sql, [latestDate], (err, bestRow) => {
+      if (err) {
+        console.error('SQL 錯誤:', err.message);
+        res.status(500).json({ error: '資料庫查詢失敗' });
+        return;
+      }
+      if (!bestRow) {
+        res.status(404).json({ error: '找不到最超值資料' });
+        return;
+      }
+      res.json(bestRow);
+    });
   });
 });
 
