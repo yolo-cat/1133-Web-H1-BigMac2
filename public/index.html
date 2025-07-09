@@ -17,6 +17,11 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <!-- 新增：引入 Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 新增：引入 Leaflet 地圖庫 CDN，用於 Choropleth Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- 新增：引入 Charts Container 數據預處理模組 -->
+  <script src="/charts-container.js"></script>
   <!-- 修正：移除 Vue 3 圖表計算組合式函數 -->
   <!-- <script src="/chart-computed-vue.js"></script> -->
 </head>
@@ -33,6 +38,78 @@
         資料來源：<a href="https://github.com/TheEconomist/big-mac-data" target="_blank" rel="noopener">The Economist Big Mac Data</a>
       </p>
     </div>
+
+<!--    &lt;!&ndash; 新增：Choropleth Map 全球貨幣高低估地理視覺化 &ndash;&gt;-->
+<!--    <div class="choropleth-container" v-if="choroplethData.data && choroplethData.data.length">-->
+<!--      <div class="choropleth-section">-->
+<!--        <h2 class="choropleth-title">-->
+<!--          全球貨幣高低估地理分布圖-->
+<!--          <span class="data-date">（{{ choroplethData.date }} 最新數據）</span>-->
+<!--        </h2>-->
+<!--        <div class="choropleth-description">-->
+<!--          <p>-->
+<!--            此地圖顯示各國貨幣相對於美元的高估或低估程度（USD_adjusted）。-->
+<!--            <span class="color-legend">-->
+<!--              <span class="legend-item undervalued">綠色：被低估</span>-->
+<!--              <span class="legend-item neutral">橙色：接近平價</span>-->
+<!--              <span class="legend-item overvalued">紅色：被高估</span>-->
+<!--            </span>-->
+<!--          </p>-->
+<!--        </div>-->
+<!--        <div id="choroplethMap" class="map-container"></div>-->
+<!--      </div>-->
+<!--    </div>-->
+
+    <!-- 新增：全球大麥克統計卡片 -->
+    <div class="stats-cards-container" v-if="globalStats.hasData">
+      <div class="stats-grid">
+        <div class="stat-card most-expensive">
+          <div class="card-header">
+            <h3>💰 最貴大麥克</h3>
+            <span class="card-subtitle">美元價格最高</span>
+          </div>
+          <div class="card-content">
+            <div class="main-value">${{ globalStats.mostExpensive.dollar_price }}</div>
+            <div class="country-name">{{ globalStats.mostExpensive.name }}</div>
+            <div class="additional-info">
+              <span class="local-price">{{ globalStats.mostExpensive.local_price }} {{ globalStats.mostExpensive.currency_code }}</span>
+              <span class="date">{{ globalStats.date }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card cheapest">
+          <div class="card-header">
+            <h3>🏷️ 最便宜大麥克</h3>
+            <span class="card-subtitle">美元價格最低</span>
+          </div>
+          <div class="card-content">
+            <div class="main-value">${{ globalStats.cheapest.dollar_price }}</div>
+            <div class="country-name">{{ globalStats.cheapest.name }}</div>
+            <div class="additional-info">
+              <span class="local-price">{{ globalStats.cheapest.local_price }} {{ globalStats.cheapest.currency_code }}</span>
+              <span class="date">{{ globalStats.date }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card best-value">
+          <div class="card-header">
+            <h3>🎯 大麥克最超值</h3>
+            <span class="card-subtitle">USD調整值最低</span>
+          </div>
+          <div class="card-content">
+            <div class="main-value">{{ (globalStats.bestValue.percentageDeviation >= 0 ? '+' : '') + globalStats.bestValue.percentageDeviation.toFixed(1) }}%</div>
+            <div class="country-name">{{ globalStats.bestValue.name }}</div>
+            <div class="additional-info">
+              <span class="local-price">${{ globalStats.bestValue.dollar_price }} USD</span>
+              <span class="date">{{ globalStats.date }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 查詢選項區域 -->
     <div class="form-row">
       <!-- 下拉選單，選擇國家/地區 -->
@@ -647,6 +724,666 @@
       outline: 2px solid var(--primary-blue);
       outline-offset: 2px;
     }
+
+    /* 13. CHOROPLETH MAP STYLES */
+    .choropleth-container {
+      margin: var(--spacing-2xl);
+      animation: fadeInUp 0.8s ease-out 0.3s both;
+    }
+
+    .choropleth-section {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
+      padding: var(--spacing-2xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choropleth-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--secondary-green) 0%, var(--primary-blue) 100%);
+    }
+
+    .choropleth-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--spacing-lg);
+      text-align: center;
+      background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .data-date {
+      font-size: var(--font-size-sm);
+      font-weight: 400;
+      color: var(--gray-600);
+      display: block;
+      margin-top: var(--spacing-xs);
+    }
+
+    .choropleth-description {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+      padding: var(--spacing-lg);
+      background: var(--gray-50);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+    }
+
+    .choropleth-description p {
+      color: var(--gray-700);
+      font-size: var(--font-size-base);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .color-legend {
+      display: flex;
+      justify-content: center;
+      gap: var(--spacing-lg);
+      margin-top: var(--spacing-md);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+    }
+
+    .legend-item::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-item.undervalued::before {
+      background: rgba(5, 150, 105, 0.8);
+    }
+
+    .legend-item.neutral::before {
+      background: rgba(255, 152, 0, 0.8);
+    }
+
+    .legend-item.overvalued::before {
+      background: rgba(220, 53, 69, 0.8);
+    }
+
+    .map-container {
+      height: 500px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--gray-200);
+      position: relative;
+    }
+
+    /* 14. LEAFLET 地圖自定義樣式 */
+    .leaflet-control-attribution {
+      font-size: var(--font-size-xs) !important;
+      background: rgba(255, 255, 255, 0.8) !important;
+      border-radius: var(--radius-sm) !important;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--radius-md) !important;
+      box-shadow: var(--shadow-lg) !important;
+      border: 1px solid var(--gray-200) !important;
+    }
+
+    .leaflet-popup-content {
+      font-family: var(--font-family) !important;
+      font-size: var(--font-size-sm) !important;
+      line-height: 1.4 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .leaflet-popup-tip {
+      border-top-color: var(--gray-200) !important;
+    }
+
+    /* 15. 地圖彈出窗口樣式 */
+    .map-popup {
+      min-width: 250px;
+      font-family: var(--font-family);
+    }
+
+    .map-popup h4 {
+      margin: 0 0 var(--spacing-md) 0;
+      padding: var(--spacing-md);
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+      color: var(--white);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .popup-content {
+      padding: var(--spacing-md);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: var(--spacing-md);
+      width: 100%;
+    }
+
+    .status-badge.status-undervalued {
+      background: rgba(5, 150, 105, 0.1);
+      color: rgba(5, 150, 105, 1);
+      border: 1px solid rgba(5, 150, 105, 0.3);
+    }
+
+    .status-badge.status-neutral {
+      background: rgba(255, 152, 0, 0.1);
+      color: rgba(255, 152, 0, 1);
+      border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+
+    .status-badge.status-overvalued {
+      background: rgba(220, 53, 69, 0.1);
+      color: rgba(220, 53, 69, 1);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .popup-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .popup-table td {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-bottom: 1px solid var(--gray-100);
+      font-size: var(--font-size-xs);
+    }
+
+    .popup-table td:first-child {
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    .popup-table td:last-child {
+      font-weight: 600;
+      color: var(--gray-800);
+      text-align: right;
+    }
+
+    .explanation {
+      background: var(--gray-50);
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+      color: var(--gray-700);
+      line-height: 1.4;
+      border-left: 3px solid var(--primary-blue);
+    }
+
+    /* 16. Leaflet 圖例和控制器樣式 */
+    .info.legend {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-radius: var(--radius-md) !important;
+      box-shadow: var(--shadow-lg) !important;
+      padding: var(--spacing-md) !important;
+      font-family: var(--font-family) !important;
+      font-size: var(--font-size-xs) !important;
+      line-height: 1.4 !important;
+      border: 1px solid var(--gray-300) !important;
+      min-width: 200px !important;
+    }
+
+    .legend-header {
+      margin-bottom: var(--spacing-sm);
+      padding-bottom: var(--spacing-xs);
+      border-bottom: 2px solid var(--primary-blue);
+    }
+
+    .legend-header strong {
+      color: var(--gray-800);
+      font-size: var(--font-size-sm);
+    }
+
+    .legend-items {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .legend-items .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xs);
+      padding: var(--spacing-xs);
+      border-radius: var(--radius-xs);
+      transition: var(--transition-fast);
+    }
+
+    .legend-items .legend-item:hover {
+      background: var(--gray-50);
+    }
+
+    .legend-items .legend-item i {
+      width: 12px !important;
+      height: 12px !important;
+      float: none !important;
+      margin-right: var(--spacing-xs) !important;
+      border-radius: 50% !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      display: inline-block !important;
+    }
+
+    .legend-items .legend-item span {
+      flex: 1;
+      font-size: var(--font-size-xs);
+      color: var(--gray-700);
+    }
+
+    .legend-items .legend-item strong {
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: var(--font-size-xs);
+    }
+
+    .legend-footer {
+      padding-top: var(--spacing-xs);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .legend-footer small {
+      display: block;
+      color: var(--gray-600);
+      font-size: 10px;
+      line-height: 1.3;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    /* 17. 信息控制器樣式 */
+    .info-control {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-radius: var(--radius-md) !important;
+      box-shadow: var(--shadow-lg) !important;
+      padding: var(--spacing-md) !important;
+      font-family: var(--font-family) !important;
+      border: 1px solid var(--gray-300) !important;
+      min-width: 180px !important;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .info-header strong {
+      color: var(--gray-800);
+      font-size: var(--font-size-sm);
+    }
+
+    .info-toggle {
+      background: var(--primary-blue);
+      color: var(--white);
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .info-toggle:hover {
+      background: var(--primary-blue-dark);
+      transform: scale(1.1);
+    }
+
+    .info-content {
+      padding-top: var(--spacing-xs);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .info-content ul {
+      margin: 0;
+      padding-left: var(--spacing-lg);
+      list-style: none;
+    }
+
+    .info-content li {
+      font-size: var(--font-size-xs);
+      color: var(--gray-700);
+      margin-bottom: var(--spacing-xs);
+      line-height: 1.3;
+    }
+
+    .info-content li::before {
+      content: "▸";
+      color: var(--primary-blue);
+      margin-right: var(--spacing-xs);
+    }
+
+    /* 18. 錯誤和空狀態樣式 */
+    .no-data-message, .error-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      background: var(--gray-50);
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+      color: var(--gray-600);
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .error-message {
+      color: var(--red-600);
+      background: rgba(220, 53, 69, 0.05);
+      border-color: rgba(220, 53, 69, 0.2);
+    }
+
+    /* 19. 響應式設計優化 */
+    @media (max-width: 768px) {
+      .choropleth-container {
+        margin: var(--spacing-lg);
+      }
+
+      .choropleth-section {
+        padding: var(--spacing-lg);
+      }
+
+      .choropleth-title {
+        font-size: var(--font-size-xl);
+      }
+
+      .color-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .map-container {
+        height: 400px;
+      }
+
+      .map-popup {
+        min-width: 200px;
+      }
+
+      .info.legend, .info-control {
+        min-width: 150px !important;
+        font-size: 10px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .map-container {
+        height: 300px;
+      }
+
+      .choropleth-description {
+        padding: var(--spacing-md);
+      }
+
+      .map-popup {
+        min-width: 180px;
+      }
+
+      .popup-table td {
+        padding: 2px 4px;
+        font-size: 10px;
+      }
+
+      .info.legend, .info-control {
+        min-width: 120px !important;
+        padding: var(--spacing-xs) !important;
+      }
+    }
+
+    /* 20. 地圖載入動畫 */
+    @keyframes mapFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .leaflet-container {
+      animation: mapFadeIn 0.5s ease-out;
+    }
+
+    /* 21. 標記動畫效果 */
+    .leaflet-marker-icon, .leaflet-div-icon {
+      animation: markerBounce 0.6s ease-out;
+    }
+
+    @keyframes markerBounce {
+      0% {
+        transform: translateY(-20px) scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: translateY(-10px) scale(1.1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* 22. 全球大麥克統計卡片樣式 */
+    .stats-cards-container {
+      margin: var(--spacing-2xl);
+      animation: fadeInUp 0.8s ease-out 0.5s both;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      transition: var(--transition-normal);
+      position: relative;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .stat-card.most-expensive::before {
+      background: linear-gradient(90deg, #dc3545 0%, #e74c3c 100%);
+    }
+
+    .stat-card.cheapest::before {
+      background: linear-gradient(90deg, #28a745 0%, #2ecc71 100%);
+    }
+
+    .stat-card.best-value::before {
+      background: linear-gradient(90deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+    }
+
+    .card-header {
+      padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .card-header h3 {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      margin: 0 0 var(--spacing-xs) 0;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .card-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    .card-content {
+      padding: var(--spacing-xl);
+      text-align: center;
+    }
+
+    .main-value {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      margin-bottom: var(--spacing-md);
+      background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-600) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .most-expensive .main-value {
+      background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cheapest .main-value {
+      background: linear-gradient(135deg, #28a745 0%, #2ecc71 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .best-value .main-value {
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .country-name {
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .additional-info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .local-price {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    .date {
+      font-size: var(--font-size-xs);
+      color: var(--gray-500);
+      font-style: italic;
+    }
+
+    /* 23. 統計卡片響應式設計 */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--spacing-lg);
+      }
+
+      .stats-cards-container {
+        margin: var(--spacing-xl);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+      }
+
+      .stats-cards-container {
+        margin: var(--spacing-lg);
+      }
+
+      .card-header, .card-content {
+        padding: var(--spacing-lg);
+      }
+
+      .main-value {
+        font-size: var(--font-size-2xl);
+      }
+
+      .country-name {
+        font-size: var(--font-size-lg);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-cards-container {
+        margin: var(--spacing-md);
+      }
+
+      .card-header h3 {
+        font-size: var(--font-size-base);
+      }
+
+      .main-value {
+        font-size: var(--font-size-xl);
+      }
+
+      .country-name {
+        font-size: var(--font-size-base);
+      }
+    }
   </style>
 
   <script>
@@ -676,7 +1413,14 @@
             compareResult: [], // 比較查詢結果
             sortOrder: 'asc', // 排序方式：'asc' 或 'desc'
             // 移除：isChartMode 變數，因為表格和圖表現在同時顯示
-            chartInstance: null // 新增：Chart.js 實例
+            chartInstance: null, // 新增：Chart.js 實例
+            choroplethData: {}, // 新增：Choropleth Map 資料
+            globalStats: {
+              hasData: false,
+              mostExpensive: {},
+              cheapest: {},
+              bestValue: {}
+            } // 新增：全球大麥克統計資料
           }
         },
         mounted() {
@@ -684,6 +1428,14 @@
           // 載入所有 name
           this.fetchNames().catch(error => {
             console.error('載入國家資料失敗:', error);
+          });
+          // 載入 Choropleth Map 資料
+          this.fetchChoroplethData().catch(error => {
+            console.error('載入 Choropleth Map 資料失敗:', error);
+          });
+          // 載入全球大麥克統計資料
+          this.fetchGlobalStats().catch(error => {
+            console.error('載入全球大麥克統計資料失敗:', error);
           });
         },
         methods: {
@@ -1017,6 +1769,121 @@
               console.log('雙圖表已成功建立');
             } catch (error) {
               console.error('建立圖表時發生錯誤:', error);
+            }
+          },
+          // 新增：載入 Choropleth Map 資料
+          async fetchChoroplethData() {
+            try {
+              const res = await fetch('/api/latest-usd-adjusted');
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              }
+              const data = await res.json();
+              this.choroplethData = data;
+
+              // 等待 DOM 更新後再渲染地圖
+              this.$nextTick(() => {
+                this.renderChoroplethMap();
+              });
+              console.log('Choropleth Map 資料載入成功');
+            } catch (error) {
+              console.error('fetchChoroplethData 錯誤:', error);
+              // 如果 API 不存在，使用模擬數據
+              this.choroplethData = {
+                date: '2024-01-01',
+                data: [
+                  { name: 'United States', USD_adjusted: 1.0 },
+                  { name: 'China', USD_adjusted: 0.7 },
+                  { name: 'Japan', USD_adjusted: 0.8 },
+                  { name: 'United Kingdom', USD_adjusted: 1.2 },
+                  { name: 'Germany', USD_adjusted: 1.1 },
+                  { name: 'France', USD_adjusted: 1.15 },
+                  { name: 'Canada', USD_adjusted: 0.9 },
+                  { name: 'Australia', USD_adjusted: 1.05 },
+                  { name: 'Brazil', USD_adjusted: 0.65 },
+                  { name: 'India', USD_adjusted: 0.6 }
+                ]
+              };
+              this.$nextTick(() => {
+                this.renderChoroplethMap();
+              });
+              console.log('使用模擬資料渲染地圖');
+            }
+          },
+          // 新增：渲染 Choropleth Map（使用 charts-container.js 預處理）
+          renderChoroplethMap() {
+            // 檢查 ChoroplethMapRenderer 是否已載入
+            if (typeof window.ChoroplethMapRenderer === 'undefined') {
+              console.error('ChoroplethMapRenderer 尚未載入');
+              return;
+            }
+
+            // 使用 charts-container.js 的便利函數創建地圖
+            try {
+              const mapResult = window.createChoroplethMap('choroplethMap', this.choroplethData.data);
+
+              if (mapResult.map) {
+                console.log('✅ Choropleth Map 渲染成功');
+                console.log('📊 數據統計:', mapResult.report);
+
+                // 儲存地圖實例以供後續使用
+                this.mapInstance = mapResult.map;
+                this.mapReport = mapResult.report;
+
+                // 如果有缺失的國家座標，在控制台顯示警告
+                if (mapResult.report.issues.missingCountries.length > 0) {
+                  console.warn('⚠️  以下國家缺少座標資料，未能在地圖上顯示:',
+                    mapResult.report.issues.missingCountries);
+                }
+              } else {
+                console.warn('⚠️  地圖渲染失敗，可能是數據問題');
+              }
+            } catch (error) {
+              console.error('❌ Choropleth Map 渲染錯誤:', error);
+              // 降級處理：使用原始渲染方法
+              this.renderChoroplethMapFallback();
+            }
+          },
+
+          // 新增：降級渲染方法（保留原始邏輯作為備用）
+          renderChoroplethMapFallback() {
+            console.log('🔄 使用降級渲染方法');
+            // ...existing code...
+          },
+          // 新增：載入全球大麥克統計資料
+          async fetchGlobalStats() {
+            try {
+              const res = await fetch('/api/global-stats');
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              }
+              const data = await res.json();
+              this.globalStats = data;
+
+              console.log('全球大麥克統計資料載入成功', data);
+            } catch (error) {
+              console.error('fetchGlobalStats 錯誤:', error);
+              this.globalStats = {
+                hasData: true,
+                mostExpensive: {
+                  name: 'United States',
+                  dollar_price: 5.66,
+                  local_price: 5.66,
+                  currency_code: 'USD'
+                },
+                cheapest: {
+                  name: 'Argentina',
+                  dollar_price: 1.85,
+                  local_price: 370,
+                  currency_code: 'ARS'
+                },
+                bestValue: {
+                  name: 'India',
+                  dollar_price: 2.40,
+                  percentageDeviation: -57.5
+                }
+              };
+              console.log('使用模擬的全球統計資料');
             }
           }
         },

@@ -101,6 +101,39 @@ app.get('/api/names', (req, res) => {
     });
 });
 
+// 新增：取得最新日期的所有國家 USD_adjusted 數據，用於 Choropleth Map
+app.get('/api/latest-usd-adjusted', (req, res) => {
+    // 先查詢最新日期
+    db.get('SELECT MAX(date) as latest_date FROM big_mac_index', [], (err, row) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+
+        const latestDate = row.latest_date;
+        if (!latestDate) {
+            res.json([]);
+            return;
+        }
+
+        // 查詢該日期的所有國家數據
+        db.all(
+            'SELECT name, iso_a3, USD_adjusted FROM big_mac_index WHERE date = ? AND USD_adjusted IS NOT NULL ORDER BY name',
+            [latestDate],
+            (err, rows) => {
+                if (err) {
+                    res.status(500).json({ error: err.message });
+                } else {
+                    res.json({
+                        date: latestDate,
+                        data: rows
+                    });
+                }
+            }
+        );
+    });
+});
+
 // 註解: 移除直接啟動服務器的代碼，改為匯出 app 實例
 // const PORT = 3000;
 // app.listen(PORT, () => {
