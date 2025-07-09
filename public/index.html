@@ -43,10 +43,15 @@
         </select>
       </label>
       <!-- 新增：年份下拉選單，僅在已選擇國家/地區時顯示 -->
-      <label v-if="selectedName">選擇年份：
-        <select v-model="selectedYear" class="custom-select">
-          <option value="">全部年份</option>
-          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+      <label v-if="selectedName">選擇時間區間：
+        <select v-model="startYear" class="custom-select">
+          <option value="">起始年份</option>
+          <option v-for="year in years" :key="'start-' + year" :value="year">{{ year }}</option>
+        </select>
+        <span style="margin: 0 6px;">至</span>
+        <select v-model="endYear" class="custom-select">
+          <option value="">結束年份</option>
+          <option v-for="year in years" :key="'end-' + year" :value="year">{{ year }}</option>
         </select>
       </label>
 
@@ -102,22 +107,157 @@
   </div>
 
   <style>
+    /* =================================================================
+       MODERN CSS DESIGN - Professional & Clean Layout
+       ================================================================= */
 
-    /* 介绍区块样式 */
-    .intro-section {
-      max-width: 800px;
-      margin: 0 auto 24px auto;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    /* 1. CSS RESET & BASE STYLES */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Color Palette - Professional Blue & Green Theme */
+      --primary-blue: #2563eb;
+      --primary-blue-light: #3b82f6;
+      --primary-blue-dark: #1d4ed8;
+      --secondary-green: #059669;
+      --secondary-green-light: #10b981;
+      --secondary-green-dark: #047857;
+
+      /* Neutral Colors */
+      --white: #ffffff;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+
+      /* Typography */
+      --font-family: 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --font-size-3xl: 1.875rem;
+      --font-size-4xl: 2.25rem;
+
+      /* Spacing */
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+      --spacing-3xl: 4rem;
+
+      /* Border Radius */
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --radius-2xl: 1.5rem;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+      /* Transitions */
+      --transition-fast: 150ms ease-in-out;
+      --transition-normal: 300ms ease-in-out;
+      --transition-slow: 500ms ease-in-out;
+    }
+
+    /* 2. BASE ELEMENT STYLES */
+    body {
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      line-height: 1.6;
+      color: var(--gray-800);
+      background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+      min-height: 100vh;
+      padding: var(--spacing-lg);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* 3. MAIN CONTAINER */
+    #app {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--white);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      min-height: calc(100vh - 3rem);
+    }
+
+    /* 4. TYPOGRAPHY STYLES */
+    h1 {
+      font-size: var(--font-size-4xl);
+      font-weight: 800;
       text-align: center;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding: var(--spacing-2xl) var(--spacing-xl) var(--spacing-lg);
+      margin: 0;
+      letter-spacing: -0.025em;
+    }
+
+    h2 {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* 5. INTRODUCTION SECTION */
+    .intro-section {
+      max-width: 900px;
+      margin: 0 auto var(--spacing-2xl);
+      padding: var(--spacing-2xl);
+      background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--secondary-green-light) 100%);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .intro-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      pointer-events: none;
     }
 
     .intro-section p {
-      margin: 0 0 12px 0;
-      line-height: 1.6;
-      color: #333;
+      color: var(--white);
+      font-size: var(--font-size-lg);
+      line-height: 1.7;
+      margin-bottom: var(--spacing-md);
+      position: relative;
+      z-index: 1;
     }
 
     .intro-section p:last-child {
@@ -125,227 +265,358 @@
     }
 
     .data-source {
-      font-size: 0.9rem;
-      color: #666;
+      font-size: var(--font-size-base) !important;
+      opacity: 0.9;
     }
 
     .data-source a {
-      color: #007bff;
+      color: var(--white);
       text-decoration: none;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition-normal);
     }
 
     .data-source a:hover {
-      text-decoration: underline;
+      border-bottom-color: var(--white);
+      transform: translateY(-1px);
     }
 
-    body, html, .surface-0, .p-card, .p-panel, .p-dropdown, .p-datatable, .table-container, .table-section, table, th, td, input, select, button {
-      font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif !important;
-    }
-    .custom-select {
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      margin-left: 4px;
-    }
-    label {
-      font-weight: bold;
-      margin-right: 8px;
-    }
-    /* 新增：表格容器樣式 - 修改為左右並排 */
-    .table-container {
-      display: flex;
-      flex-direction: row;
-      gap: 16px;
-      margin-top: 16px;
-      align-items: flex-start;
-    }
-    /* 新增：單個表格區塊樣式 - 調整為等寬 */
-    .table-section {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 16px;
-      background-color: #fff;
-      flex: 1;
-      min-width: 0;
-    }
-    /* 新增：表格自適應寬度 */
-    .table-section table {
-      width: 100%;
-      font-size: 0.9rem;
-    }
-    /* 新增：響應式設計 - 小螢幕時垂直排列 */
-    @media (max-width: 768px) {
-      .table-container {
-        flex-direction: column;
-      }
-    }
-    /* 新增：圖表容器樣式 */
-    .chart-container {
-      margin-top: 16px;
-      padding: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: #fff;
-    }
-    .chart-container canvas {
-      max-height: 400px;
-    }
-    /* 新增：開發中提示樣式 */
-    .development-notice {
-      padding: 16px;
-      background-color: #fff3cd;
-      border: 1px solid #ffeeba;
-      border-radius: 8px;
-      margin-top: 16px;
-      text-align: center;
-    }
-    .development-notice h3 {
-      margin: 0 0 8px 0;
-      color: #856404;
-    }
-    .development-notice p {
-      margin: 0;
-      color: #856404;
-    }
-    /* 強制下拉選單字體與字型大小一致 */
-    .custom-select, select {
-      font-size: 1rem;
-      font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
-      padding: 7px 14px;
-      border-radius: 6px;
-      border: 1px solid #b0b0b0;
-      background: #fff;
-      transition: border 0.2s, box-shadow 0.2s;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-    .custom-select:focus, .custom-select:hover, select:focus, select:hover {
-      border-color: #007bff;
-      box-shadow: 0 0 0 2px #cce1ff;
-      outline: none;
-    }
+    /* 6. FORM CONTROLS */
     .form-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 18px;
-      margin-bottom: 18px;
+      gap: var(--spacing-xl);
+      margin: 0 var(--spacing-2xl) var(--spacing-2xl);
       align-items: center;
-      background: #f8f9fa;
-      padding: 16px 18px;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      justify-content: center; /* 置中內容 */
-    }
-    .form-row label {
-      font-weight: bold;
-      font-size: 1.08rem;
-      margin-right: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    /* 置中查詢表單區塊 */
-    .centered-form-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: var(--white);
+      padding: var(--spacing-2xl);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--gray-200);
       justify-content: center;
-      min-height: 180px;
-      width: 100%;
     }
-    /* 置中標題 */
-    h1 {
-      text-align: center;
+
+    .form-row label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      font-weight: 600;
+      font-size: var(--font-size-base);
+      color: var(--gray-700);
+      white-space: nowrap;
     }
-    /* 修改：圖表容器美化，標題更明顯，區塊加大圓角與陰影 */
-    .enhanced-chart {
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+    .custom-select, select {
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      padding: var(--spacing-md) var(--spacing-lg);
+      border: 2px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      color: var(--gray-800);
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      min-width: 160px;
+      cursor: pointer;
+    }
+
+    .custom-select:hover, select:hover {
+      border-color: var(--primary-blue-light);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .custom-select:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1), var(--shadow-md);
+    }
+
+    /* 7. CHART CONTAINER */
+    .chart-container {
+      margin: var(--spacing-2xl);
+      padding: var(--spacing-2xl);
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
+      position: relative;
       overflow: hidden;
-      margin-top: 24px;
     }
+
+    .chart-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+    }
+
     .chart-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin: 0 0 16px 0;
-      padding: 16px;
-      background: linear-gradient(90deg, #007bff, #00c853);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    /* 新增：查詢結果區域美化 */
-    .enhanced-table {
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      margin-top: 24px;
-    }
-    /* 表格標題與表頭美化 */
-    .table-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin: 0 0 16px 0;
-      padding: 16px 0 8px 0;
-      background: linear-gradient(90deg, #007bff, #00c853);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: 2px;
-      text-align: left;
-    }
-    .table-section table {
-      border-collapse: collapse;
-      width: 100%;
-      background: #f8f9fa;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 0;
-    }
-    .table-section th, .table-section td {
-      padding: 12px 8px;
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--spacing-xl);
       text-align: center;
-      transition: background 0.2s;
-      font-size: 1.08rem;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
+    .chart-container canvas {
+      max-height: 450px;
+      border-radius: var(--radius-md);
+    }
+
+    /* 8. TABLE STYLES */
+    .table-container {
+      margin: var(--spacing-2xl);
+    }
+
+    .table-section {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
+      padding: var(--spacing-2xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .table-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--secondary-green) 0%, var(--primary-blue) 100%);
+    }
+
+    .table-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--spacing-xl);
+      text-align: center;
+      background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .table-section table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      background: var(--white);
+    }
+
     .table-section th {
-      background: #007bff;
-      color: #fff;
-      font-weight: bold;
-      font-size: 1.1rem;
-      letter-spacing: 1px;
-      border-bottom: 2px solid #00c853;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+      color: var(--white);
+      padding: var(--spacing-lg) var(--spacing-md);
+      text-align: center;
+      font-weight: 600;
+      font-size: var(--font-size-sm);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: relative;
     }
-    .table-section tr:nth-child(even) {
-      background: #f1f3f4;
+
+    .table-section th::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--secondary-green);
     }
-    .table-section tr:hover {
-      background: #e3eafc;
-    }
+
     .table-section td {
-      color: #222;
+      padding: var(--spacing-lg) var(--spacing-md);
+      text-align: center;
+      font-size: var(--font-size-sm);
       font-weight: 500;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-100);
+      transition: var(--transition-fast);
     }
-    /* 響應式表格 */
-    @media (max-width: 768px) {
-      .table-section table, .table-section th, .table-section td {
-        font-size: 1rem;
+
+    .table-section tbody tr:nth-child(even) {
+      background: var(--gray-50);
+    }
+
+    .table-section tbody tr:hover {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-section tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* 9. RESPONSIVE DESIGN */
+    @media (max-width: 1024px) {
+      body {
+        padding: var(--spacing-md);
       }
+
+      #app {
+        border-radius: var(--radius-xl);
+      }
+
+      .form-row {
+        margin: 0 var(--spacing-lg) var(--spacing-xl);
+        padding: var(--spacing-xl);
+      }
+
+      .chart-container, .table-container {
+        margin: var(--spacing-xl);
+      }
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: var(--font-size-3xl);
+        padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+      }
+
+      .intro-section {
+        margin-bottom: var(--spacing-xl);
+        padding: var(--spacing-xl);
+      }
+
+      .intro-section p {
+        font-size: var(--font-size-base);
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        margin: 0 var(--spacing-md) var(--spacing-lg);
+        padding: var(--spacing-lg);
+      }
+
+      .form-row label {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .custom-select, select {
+        min-width: 140px;
+      }
+
+      .chart-container, .table-container {
+        margin: var(--spacing-lg);
+      }
+
+      .table-section {
+        padding: var(--spacing-lg);
+      }
+
+      .table-section table {
+        font-size: var(--font-size-xs);
+      }
+
+      .table-section th, .table-section td {
+        padding: var(--spacing-md) var(--spacing-sm);
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: var(--spacing-sm);
+      }
+
+      h1 {
+        font-size: var(--font-size-2xl);
+      }
+
+      .chart-container, .table-container {
+        margin: var(--spacing-md);
+      }
+
       .table-section table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
       }
     }
-    @media (max-width: 600px) {
-      .form-row {
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
+
+    /* 10. ANIMATIONS & INTERACTIONS */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
       }
-      .form-row label {
-        width: 100%;
-        justify-content: flex-start;
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
+    }
+
+    @keyframes slideInFromLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .intro-section {
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .form-row {
+      animation: slideInFromLeft 0.8s ease-out 0.2s both;
+    }
+
+    .chart-container {
+      animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .table-section {
+      animation: fadeInUp 0.8s ease-out 0.6s both;
+    }
+
+    /* 11. LOADING STATES & UTILITIES */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* 12. ACCESSIBILITY IMPROVEMENTS */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    .custom-select:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary-blue);
+      outline-offset: 2px;
     }
   </style>
 
@@ -369,7 +640,8 @@
             names: [], // 所有國家/地區名稱
             years: [], // 該 name 對應的所有年份
             selectedName: '', // 當前選擇的 name
-            selectedYear: '', // 當前選擇的年份
+            startYear: '', // 當前選擇的起始年份
+            endYear: '', // 當前選擇的結束年份
             result: [], // 查詢結果
             compareCountry: '', // 當前選擇的比較國家/地區
             compareResult: [], // 比較查詢結果
@@ -404,11 +676,12 @@
           // 依 name 查詢，並取得年份
           async fetchByName() {
             try {
-              // 註解: 當選擇 name 或年份時自動查詢
+              // 註解: 當選擇 name 時自動查詢
               if (!this.selectedName) {
                 this.result = [];
                 this.years = [];
-                this.selectedYear = '';
+                this.startYear = '';
+                this.endYear = '';
                 return;
               }
               // 查詢該 name 的所有資料
@@ -438,17 +711,44 @@
                 if (row.date && row.date.length >= 4) yearSet.add(row.date.slice(0, 4));
               });
               this.years = Array.from(yearSet).sort();
-              // 修正：若選擇了年份，則只顯示該年份資料
-              if (this.selectedYear) {
-                this.result = uniqueData.filter(row => row.date && row.date.startsWith(this.selectedYear));
-              } else {
-                this.result = uniqueData;
-              }
+
+              // 修正：根據起始和結束年份篩選資料
+              this.result = this.filterByDateRange(uniqueData);
               console.log('查詢結果:', this.result.length, '筆資料');
             } catch (error) {
               console.error('fetchByName 錯誤:', error);
               alert('查詢資料失敗，請稍後再試');
             }
+          },
+
+          // 新增：根據時間區間篩選資料的輔助方法
+          filterByDateRange(data) {
+            if (!this.startYear && !this.endYear) {
+              return data; // 沒有選擇年份，返回所有資料
+            }
+
+            return data.filter(row => {
+              if (!row.date) return false;
+
+              const rowYear = row.date.slice(0, 4);
+
+              // 只有起始年份
+              if (this.startYear && !this.endYear) {
+                return rowYear >= this.startYear;
+              }
+
+              // 只有結束年份
+              if (!this.startYear && this.endYear) {
+                return rowYear <= this.endYear;
+              }
+
+              // 有起始和結束年份
+              if (this.startYear && this.endYear) {
+                return rowYear >= this.startYear && rowYear <= this.endYear;
+              }
+
+              return true;
+            });
           },
           // 新增：依比較國家查詢資料
           async fetchCompareData() {
@@ -480,8 +780,8 @@
               });
 
               // 若選擇了年份，則只顯示該年份資料
-              if (this.selectedYear) {
-                this.compareResult = uniqueData.filter(row => row.date && row.date.startsWith(this.selectedYear));
+              if (this.startYear && this.endYear) {
+                this.compareResult = uniqueData.filter(row => row.date && row.date >= this.startYear && row.date <= this.endYear);
               } else {
                 this.compareResult = uniqueData;
               }
@@ -555,23 +855,23 @@
                   datasets: datasets
                 },
                 options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: true },
-                    title: {
-                      display: true,
-                      text: 'Big Mac 當地價格走勢'
-                    }
-                  },
-                  scales: {
-                    x: {
-                      title: { display: true, text: '日期' }
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {display: true},
+                        title: {
+                            display: true,
+                            text: 'Big Mac 當地價格走勢'
+                        }
                     },
-                    y: {
-                      title: { display: true, text: '當地價格' }
+                    scales: {
+                        x: {
+                            title: {display: true, text: '日期'}
+                        },
+                        y: {
+                            title: {display: true, text: '當地價格'}
+                        }
                     }
-                  }
                 }
               });
               console.log('圖表已成功建立');
@@ -587,9 +887,9 @@
             let filteredData = this.result;
 
             // 如果選擇了年份，則只顯示該年份的資料
-            if (this.selectedYear) {
+            if (this.startYear && this.endYear) {
               filteredData = this.result.filter(row =>
-                row.date && row.date.startsWith(this.selectedYear)
+                row.date && row.date >= this.startYear && row.date <= this.endYear
               );
             }
 
@@ -605,9 +905,9 @@
             let filteredData = this.compareResult;
 
             // 如果選擇了年份，則只顯示該年份的資料
-            if (this.selectedYear) {
+            if (this.startYear && this.endYear) {
               filteredData = this.compareResult.filter(row =>
-                row.date && row.date.startsWith(this.selectedYear)
+                row.date && row.date >= this.startYear && row.date <= this.endYear
               );
             }
 
@@ -624,7 +924,8 @@
             // 修正：清空所有相關資料，避免殘留上次查詢結果
             this.result = [];
             this.years = [];
-            this.selectedYear = '';
+            this.startYear = '';
+            this.endYear = '';
 
             if (newVal) {
               this.fetchByName();
@@ -638,8 +939,25 @@
             }
           },
           // 當年份變動時自動查詢
-          selectedYear(newVal, oldVal) {
+          startYear(newVal, oldVal) {
             // 修正：年份改變時立即重新查詢，確保資料正確更新
+            if (this.selectedName) {
+              this.fetchByName();
+            }
+            // 新增：年份變動時，同步更新比較國家的資料
+            if (this.compareCountry) {
+              this.fetchCompareData();
+            }
+            // 修正：確保年份變動時立即更新圖表（移除 isChartMode 條件）
+            if (this.selectedName) {
+              this.$nextTick(() => {
+                // 等待資料載入完成後再渲染圖表
+                setTimeout(() => this.renderChart(), 100);
+              });
+            }
+          },
+          endYear(newVal, oldVal) {
+            // 修正：年份變動時自動查詢
             if (this.selectedName) {
               this.fetchByName();
             }
