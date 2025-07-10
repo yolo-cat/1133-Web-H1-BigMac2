@@ -105,3 +105,6 @@ db.serialize(() => {
             });
     });
 });
+// // ...原本的程式碼
+//
+// module.exports = db;
